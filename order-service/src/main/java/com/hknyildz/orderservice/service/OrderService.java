@@ -1,5 +1,6 @@
 package com.hknyildz.orderservice.service;
 
+import com.hknyildz.orderservice.dto.InventoryResponse;
 import com.hknyildz.orderservice.dto.OrderLineItemsDto;
 import com.hknyildz.orderservice.dto.OrderRequest;
 import com.hknyildz.orderservice.model.Order;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,16 +33,23 @@ public class OrderService {
 
         order.setOrderLineItemsList(orderLineItems);
 
+        List<String> skuCodes = order.getOrderLineItemsList().stream()
+                .map(OrderLineItems::getSkuCode).toList();
+
         // call Inventory service and place order if product is in stock
-        Boolean result = webClient.get()
-                .uri("http://localhost:8082/api/inventory/"+orderLineItems.get(0).getSkuCode())
+        InventoryResponse[] inventoryResponseArray = webClient.get()
+                .uri("http://localhost:8082/api/inventory",
+                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                 .retrieve()
-                .bodyToMono(Boolean.class) // mono is object of a reactive framework that helps us to read response
+                .bodyToMono(InventoryResponse[].class) // mono is object of a reactive framework that helps us to read response
                 .block();
-        if(Boolean.TRUE.equals(result)) {
+
+        Boolean allProductsInStock = Arrays.stream(inventoryResponseArray)
+                .allMatch(InventoryResponse::isInStock);
+
+        if (Boolean.TRUE.equals(allProductsInStock)) {
             orderRepository.save(order);
-        }
-        else{
+        } else {
             throw new IllegalArgumentException("Product is not on stock");
         }
     }
