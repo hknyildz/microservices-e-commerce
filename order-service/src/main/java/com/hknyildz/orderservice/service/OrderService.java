@@ -21,7 +21,7 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     public void placeOrder(OrderRequest orderRequest) {
         Order order = new Order();
@@ -37,8 +37,9 @@ public class OrderService {
                 .map(OrderLineItems::getSkuCode).toList();
 
         // call Inventory service and place order if product is in stock
-        InventoryResponse[] inventoryResponseArray = webClient.get()
-                .uri("http://localhost:8082/api/inventory",
+        String INVENTORY_SERVICE_URI = "http://inventory-service/api/inventory";
+        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                .uri(INVENTORY_SERVICE_URI,
                         uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
                 .retrieve()
                 .bodyToMono(InventoryResponse[].class) // mono is object of a reactive framework that helps us to read response

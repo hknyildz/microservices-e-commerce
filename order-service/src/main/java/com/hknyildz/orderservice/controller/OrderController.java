@@ -1,10 +1,8 @@
 package com.hknyildz.orderservice.controller;
 
 import com.hknyildz.orderservice.dto.OrderRequest;
-import com.hknyildz.orderservice.dto.OrderRespone;
 import com.hknyildz.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.mapping.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +17,7 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public String placeOrder(@RequestBody OrderRequest orderRequest){
         orderService.placeOrder(orderRequest);
-        return "Order Placed Succesfully";
+        return "Order Placed Successfully";
     }
 
 //    @GetMapping
